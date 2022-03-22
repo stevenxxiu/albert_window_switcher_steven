@@ -10,9 +10,9 @@ from collections import namedtuple
 from albert import Item, ProcAction, iconLookup  # pylint: disable=import-error
 
 
-__title__ = 'Window Switcher'
-__version__ = '0.4.5'
-__authors__ = ['Ed Perez', 'manuelschneid3r', 'dshoreman']
+__title__ = 'Window Switcher User'
+__version__ = '0.4.6'
+__authors__ = ['Steven Xu', 'Ed Perez', 'manuelschneid3r', 'dshoreman']
 __exec_deps__ = ['wmctrl']
 
 Window = namedtuple('Window', ['wid', 'desktop', 'wm_class', 'host', 'wm_name'])
