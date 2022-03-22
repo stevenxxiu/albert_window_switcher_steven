@@ -26,6 +26,25 @@ def parse_window(line):
     return [win_id, desktop, win_class, host, title]
 
 
+def find_win_instance_class(wm_class):
+    match wm_class:
+        case 'org.wezfurlong.wezterm.org.wezfurlong.wezterm':
+            return 'org.wezfurlong.wezterm', 'org.wezfurlong.wezterm'
+        case _:
+            parts = wm_class.replace(' ', '-').split('.')
+            return parts if len(parts) == 2 else ('', '')
+
+
+def find_icon_path(wm_class, win_instance, win_class):
+    match wm_class:
+        case 'subl.Subl':
+            return iconLookup('sublime-text')
+        case 'vivaldi-stable.Vivaldi-stable':
+            return iconLookup('vivaldi')
+        case _:
+            return iconLookup(win_instance) or iconLookup(win_class.lower())
+
+
 def handleQuery(query):
     stripped = query.string.strip().lower()
     if not stripped:
@@ -37,22 +56,11 @@ def handleQuery(query):
         if win.desktop == '-1':
             continue
 
-        match win.wm_class:
-            case 'org.wezfurlong.wezterm.org.wezfurlong.wezterm':
-                win_instance, win_class = 'org.wezfurlong.wezterm', 'org.wezfurlong.wezterm'
-            case _:
-                parts = win.wm_class.replace(' ', '-').split('.')
-                (win_instance, win_class) = parts if len(parts) == 2 else ('', '')
+        (win_instance, win_class) = find_win_instance_class(win.wm_class)  # pylint: disable=unpacking-non-sequence
         matches = [win_instance.lower(), win_class.lower(), win.wm_name.lower()]
 
         if any(stripped in match for match in matches):
-            match win.wm_class:
-                case 'subl.Subl':
-                    icon_path = iconLookup('sublime-text')
-                case 'vivaldi-stable.Vivaldi-stable':
-                    icon_path = iconLookup('vivaldi')
-                case _:
-                    icon_path = iconLookup(win_instance) or iconLookup(win_class.lower())
+            icon_path = find_icon_path(win.wm_class, win_instance, win_class)
             results.append(
                 Item(
                     id=f'{__title__}{win.wm_class}',
