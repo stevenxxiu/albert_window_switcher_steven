@@ -37,6 +37,12 @@ def find_win_instance_class(wm_class):
 
 def find_icon_path(wm_class, win_instance, win_class):
     match wm_class:
+        case 'jetbrains-clion.jetbrains-clion':
+            return iconLookup('clion')
+        case 'jetbrains-idea.jetbrains-idea':
+            return iconLookup('intellij-idea-ultimate-edition')
+        case 'jetbrains-pycharm.jetbrains-pycharm':
+            return iconLookup('pycharm')
         case 'subl.Subl':
             return iconLookup('sublime-text')
         case 'vivaldi-stable.Vivaldi-stable':
