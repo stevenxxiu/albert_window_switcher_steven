@@ -37,11 +37,22 @@ def handleQuery(query):
         if win.desktop == '-1':
             continue
 
-        win_instance, win_class = win.wm_class.replace(' ', '-').split('.')
+        match win.wm_class:
+            case 'org.wezfurlong.wezterm.org.wezfurlong.wezterm':
+                win_instance, win_class = 'org.wezfurlong.wezterm', 'org.wezfurlong.wezterm'
+            case _:
+                parts = win.wm_class.replace(' ', '-').split('.')
+                (win_instance, win_class) = parts if len(parts) == 2 else ('', '')
         matches = [win_instance.lower(), win_class.lower(), win.wm_name.lower()]
 
         if any(stripped in match for match in matches):
-            icon_path = iconLookup(win_instance) or iconLookup(win_class.lower())
+            match win.wm_class:
+                case 'subl.Subl':
+                    icon_path = iconLookup('sublime-text')
+                case 'vivaldi-stable.Vivaldi-stable':
+                    icon_path = iconLookup('vivaldi')
+                case _:
+                    icon_path = iconLookup(win_instance) or iconLookup(win_class.lower())
             results.append(
                 Item(
                     id=f'{__title__}{win.wm_class}',
