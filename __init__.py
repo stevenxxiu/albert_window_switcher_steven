@@ -27,26 +27,28 @@ def parse_window(line):
 def find_win_instance_class(wm_class):
     match wm_class:
         case 'org.wezfurlong.wezterm.org.wezfurlong.wezterm':
-            return 'org.wezfurlong.wezterm', 'org.wezfurlong.wezterm'
+            return 'org.wezfurlong.wezterm', 'WezTerm'
+        case 'texmacs.bin.texmacs.bin':
+            return 'texmacs.bin', 'TeXmacs'
         case _:
             parts = wm_class.replace(' ', '-').split('.')
             return parts if len(parts) == 2 else ('', '')
 
 
 def find_icon_path(wm_class, win_instance, win_class):
-    match wm_class:
-        case 'jetbrains-clion.jetbrains-clion':
-            return iconLookup('clion')
-        case 'jetbrains-idea.jetbrains-idea':
-            return iconLookup('intellij-idea-ultimate-edition')
-        case 'jetbrains-pycharm.jetbrains-pycharm':
-            return iconLookup('pycharm')
-        case 'subl.Subl':
-            return iconLookup('sublime-text')
-        case 'vivaldi-stable.Vivaldi-stable':
-            return iconLookup('vivaldi')
-        case _:
-            return iconLookup(win_instance) or iconLookup(win_class.lower())
+    try:
+        wm_class_to_icon_name = {
+            'jetbrains-clion.jetbrains-clion': 'clion',
+            'jetbrains-idea.jetbrains-idea': 'intellij-idea-ultimate-edition',
+            'jetbrains-pycharm.jetbrains-pycharm': 'pycharm',
+            'PDF Studio Pro.PDF Studio Pro': 'pdfstudio',
+            'subl.Subl': 'sublime-text',
+            'texmacs.bin.texmacs.bin': 'TeXmacs',
+            'vivaldi-stable.Vivaldi-stable': 'vivaldi',
+        }
+        return iconLookup(wm_class_to_icon_name[wm_class])
+    except KeyError:
+        return iconLookup(win_instance) or iconLookup(win_class.lower())
 
 
 def handleQuery(query):
