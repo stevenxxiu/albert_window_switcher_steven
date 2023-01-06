@@ -1,30 +1,35 @@
-'''List and manage X11 windows.
-
-Synopsis: <filter>'''
-
 import subprocess
-from collections import namedtuple
+from typing import Dict, List, NamedTuple
 
-from albert import Item, ProcAction, iconLookup  # pylint: disable=import-error
-
-
-__title__ = 'Window Switcher User'
-__version__ = '0.4.6'
-__authors__ = ['Steven Xu', 'Ed Perez', 'manuelschneid3r', 'dshoreman']
-__exec_deps__ = ['wmctrl']
-
-Window = namedtuple('Window', ['wid', 'desktop', 'wm_class', 'host', 'wm_name'])
+from albert import Action, Item, Query, QueryHandler, runDetachedProcess  # pylint: disable=import-error
 
 
-def parse_window(line):
+md_iid = '0.5'
+md_version = '1.0'
+md_name = 'Window Switcher User'
+md_description = 'List and manage X11 windows.'
+md_url = 'https://github.com/stevenxxiu/albert_window_switcher_user'
+md_maintainers = '@stevenxxiu'
+md_bin_dependencies = ['wmctrl']
+
+
+class Window(NamedTuple):
+    wid: str
+    desktop: str
+    wm_class: str
+    host: str
+    wm_name: str
+
+
+def parse_window(line: str) -> Window:
     win_id, desktop, rest = line.split(None, 2)
     win_class, rest = rest.split('  ', 1)
     host, title = rest.strip().split(None, 1)
 
-    return [win_id, desktop, win_class, host, title]
+    return Window(win_id, desktop, win_class, host, title)
 
 
-def find_win_instance_class(wm_class):
+def find_win_instance_class(wm_class: str) -> (str, str):
     match wm_class:
         case 'org.wezfurlong.wezterm.org.wezfurlong.wezterm':
             return 'org.wezfurlong.wezterm', 'WezTerm'
@@ -35,49 +40,77 @@ def find_win_instance_class(wm_class):
             return parts if len(parts) == 2 else ('', '')
 
 
-def find_icon_path(wm_class, win_instance, win_class):
-    try:
-        wm_class_to_icon_name = {
-            'jetbrains-clion.jetbrains-clion': 'clion',
-            'jetbrains-idea.jetbrains-idea': 'intellij-idea-ultimate-edition',
-            'jetbrains-pycharm.jetbrains-pycharm': 'pycharm',
-            'PDF Studio Pro.PDF Studio Pro': 'pdfstudio',
-            'subl.Subl': 'sublime-text',
-            'texmacs.bin.texmacs.bin': 'TeXmacs',
-            'vivaldi-stable.Vivaldi-stable': 'vivaldi',
-        }
-        return iconLookup(wm_class_to_icon_name[wm_class])
-    except KeyError:
-        return iconLookup(win_instance) or iconLookup(win_class.lower())
+WM_CLASS_TO_ICON_NAME: Dict[str, str] = {
+    'jetbrains-clion.jetbrains-clion': '/usr/share/pixmaps/clion.svg',
+    'jetbrains-idea.jetbrains-idea': '/usr/share/pixmaps/intellij-idea-ultimate-edition.svg',
+    'jetbrains-pycharm.jetbrains-pycharm': 'xdg:pycharm',
+    'PDF Studio Pro.PDF Studio Pro': '/usr/share/pixmaps/pdfstudio.png',
+    'subl.Subl': 'xdg:sublime-text',
+    'texmacs.bin.texmacs.bin': 'xdg:TeXmacs',
+    'vivaldi-stable.Vivaldi-stable': 'xdg:vivaldi',
+}
 
 
-def handleQuery(query):
-    stripped = query.string.strip().lower()
-    if not stripped:
-        return None
-    results = []
-    for line in subprocess.check_output(['wmctrl', '-l', '-x'], text=True).splitlines():
-        win = Window(*parse_window(line))
+def get_icons(wm_class: str, win_instance: str, win_class: str) -> List[str]:
+    res = []
+    if wm_class in WM_CLASS_TO_ICON_NAME:
+        res = [WM_CLASS_TO_ICON_NAME[wm_class]]
+    return [*res, f'xdg:{win_instance}', f'xdg:{win_class.lower()}']
 
-        if win.desktop == '-1':
-            continue
 
-        (win_instance, win_class) = find_win_instance_class(win.wm_class)  # pylint: disable=unpacking-non-sequence
-        matches = [win_instance.lower(), win_class.lower(), win.wm_name.lower()]
+class Plugin(QueryHandler):
+    @staticmethod
+    def id() -> str:
+        return __name__
 
-        if any(stripped in match for match in matches):
-            icon_path = find_icon_path(win.wm_class, win_instance, win_class)
-            results.append(
-                Item(
-                    id=f'{__title__}{win.wm_class}',
-                    icon=icon_path,
-                    text=f'{win_class.replace("-", " ")}  - <i>Desktop {win.desktop}</i>',
+    @staticmethod
+    def name() -> str:
+        return md_name
+
+    @staticmethod
+    def description() -> str:
+        return md_description
+
+    @staticmethod
+    def synopsis() -> str:
+        return 'filter'
+
+    @staticmethod
+    def handleQuery(query: Query) -> None:
+        stripped = query.string.strip().lower()
+        if not stripped:
+            return
+        for line in subprocess.check_output(['wmctrl', '-l', '-x'], text=True).splitlines():
+            win = Window(*parse_window(line))
+
+            if win.desktop == '-1':
+                continue
+
+            (win_instance, win_class) = find_win_instance_class(win.wm_class)  # pylint: disable=unpacking-non-sequence
+            matches = [win_instance.lower(), win_class.lower(), win.wm_name.lower()]
+
+            if any(stripped in match for match in matches):
+                item = Item(
+                    id=f'{md_name}/{win.wid}',
+                    text=f'{win_class.replace("-", " ")} - <i>Desktop {win.desktop}</i>',
                     subtext=win.wm_name,
+                    icon=get_icons(win.wm_class, win_instance, win_class.lower()),
                     actions=[
-                        ProcAction('Switch Window', ['wmctrl', '-i', '-a', win.wid]),
-                        ProcAction('Move window to this desktop', ['wmctrl', '-i', '-R', win.wid]),
-                        ProcAction('Close the window gracefully.', ['wmctrl', '-c', win.wid]),
+                        Action(
+                            f'{md_name}/switch/{win.wid}',
+                            'Switch Window',
+                            lambda wid=win.wid: runDetachedProcess(['wmctrl', '-i', '-a', wid]),
+                        ),
+                        Action(
+                            f'{md_name}/move_to_desktop/{win.wid}',
+                            'Move window to this desktop',
+                            lambda wid=win.wid: runDetachedProcess(['wmctrl', '-i', '-R', wid]),
+                        ),
+                        Action(
+                            f'{md_name}/close/{win.wid}',
+                            'Close the window gracefully',
+                            lambda wid=win.wid: runDetachedProcess(['wmctrl', '-c', wid]),
+                        ),
                     ],
                 )
-            )
-    return results
+                query.add(item)
