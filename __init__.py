@@ -17,7 +17,7 @@ Window = namedtuple('Window', ['wid', 'desktop', 'wm_class', 'host', 'wm_name'])
 
 
 def parse_window(line):
-    win_id, desktop, rest = line.decode().split(None, 2)
+    win_id, desktop, rest = line.split(None, 2)
     win_class, rest = rest.split('  ', 1)
     host, title = rest.strip().split(None, 1)
 
@@ -56,7 +56,7 @@ def handleQuery(query):
     if not stripped:
         return None
     results = []
-    for line in subprocess.check_output(['wmctrl', '-l', '-x']).splitlines():
+    for line in subprocess.check_output(['wmctrl', '-l', '-x'], text=True).splitlines():
         win = Window(*parse_window(line))
 
         if win.desktop == '-1':
