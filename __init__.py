@@ -6,9 +6,9 @@ from albert import Action, Item, Query, QueryHandler, runDetachedProcess  # pyli
 
 md_iid = '0.5'
 md_version = '1.0'
-md_name = 'Window Switcher User'
+md_name = 'Window Switcher Steven'
 md_description = 'List and manage X11 windows.'
-md_url = 'https://github.com/stevenxxiu/albert_window_switcher_user'
+md_url = 'https://github.com/stevenxxiu/albert_window_switcher_steven'
 md_maintainers = '@stevenxxiu'
 md_bin_dependencies = ['wmctrl']
 
