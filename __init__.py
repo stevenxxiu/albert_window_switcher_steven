@@ -59,24 +59,19 @@ def get_icons(wm_class: str, win_instance: str, win_class: str) -> List[str]:
 
 
 class Plugin(QueryHandler):
-    @staticmethod
-    def id() -> str:
+    def id(self) -> str:
         return __name__
 
-    @staticmethod
-    def name() -> str:
+    def name(self) -> str:
         return md_name
 
-    @staticmethod
-    def description() -> str:
+    def description(self) -> str:
         return md_description
 
-    @staticmethod
-    def synopsis() -> str:
+    def synopsis(self) -> str:
         return 'filter'
 
-    @staticmethod
-    def handleQuery(query: Query) -> None:
+    def handleQuery(self, query: Query) -> None:
         stripped = query.string.strip().lower()
         if not stripped:
             return
