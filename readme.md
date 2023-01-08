@@ -1,8 +1,8 @@
 # User Customized Window Switcher Extension
-# Install
+## Install
 To install, copy or symlink this directory to `~/.local/share/albert/org.albert.extension.python/modules/window_switcher_user/`.
 
-# Development Setup
+## Development Setup
 To setup the project for development, run:
 
     $ cd window_switcher_user/
