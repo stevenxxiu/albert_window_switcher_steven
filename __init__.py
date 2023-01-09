@@ -104,7 +104,7 @@ class Plugin(QueryHandler):
                         Action(
                             f'{md_name}/close/{win.wid}',
                             'Close the window gracefully',
-                            lambda wid=win.wid: runDetachedProcess(['wmctrl', '-c', wid]),
+                            lambda wid=win.wid: runDetachedProcess(['wmctrl', '-i', '-c', wid]),
                         ),
                     ],
                 )
