@@ -41,10 +41,10 @@ def find_win_instance_class(wm_class: str) -> (str, str):
 
 
 WM_CLASS_TO_ICON_NAME: Dict[str, str] = {
-    'jetbrains-clion.jetbrains-clion': '/usr/share/pixmaps/clion.svg',
-    'jetbrains-idea.jetbrains-idea': '/usr/share/pixmaps/intellij-idea-ultimate-edition.svg',
+    'jetbrains-clion.jetbrains-clion': 'xdg:clion',
+    'jetbrains-idea.jetbrains-idea': 'xdg:intellij-idea-ultimate-edition',
     'jetbrains-pycharm.jetbrains-pycharm': 'xdg:pycharm',
-    'PDF Studio Pro.PDF Studio Pro': '/usr/share/pixmaps/pdfstudio.png',
+    'PDF Studio Pro.PDF Studio Pro': 'xdg:pdfstudio',
     'subl.Subl': 'xdg:sublime-text',
     'texmacs.bin.texmacs.bin': 'xdg:TeXmacs',
     'vivaldi-stable.Vivaldi-stable': 'xdg:vivaldi',
