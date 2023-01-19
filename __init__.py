@@ -1,7 +1,7 @@
-import subprocess
-from typing import Dict, List, NamedTuple
+from typing import Callable, ParamSpec
 
-from albert import Action, Item, Query, QueryHandler, runDetachedProcess  # pylint: disable=import-error
+from albert import Action, Item, Query, QueryHandler  # pylint: disable=import-error
+from ewmh import EWMH
 
 
 md_iid = '0.5'
@@ -10,55 +10,34 @@ md_name = 'Window Switcher Steven'
 md_description = 'List and manage X11 windows.'
 md_url = 'https://github.com/stevenxxiu/albert_window_switcher_steven'
 md_maintainers = '@stevenxxiu'
-md_bin_dependencies = ['wmctrl']
+md_lib_dependencies = ['ewmh']
 
 
-class Window(NamedTuple):
-    wid: str
-    desktop: str
-    wm_class: str
-    host: str
-    wm_name: str
-
-
-def parse_window(line: str) -> Window:
-    win_id, desktop, rest = line.split(None, 2)
-    win_class, rest = rest.split('  ', 1)
-    host, title = rest.strip().split(None, 1)
-
-    return Window(win_id, desktop, win_class, host, title)
-
-
-def find_win_instance_class(wm_class: str) -> (str, str):
-    match wm_class:
-        case 'org.wezfurlong.wezterm.org.wezfurlong.wezterm':
-            return 'org.wezfurlong.wezterm', 'WezTerm'
-        case 'texmacs.bin.texmacs.bin':
-            return 'texmacs.bin', 'TeXmacs'
-        case _:
-            parts = wm_class.replace(' ', '-').split('.')
-            return parts if len(parts) == 2 else ('', '')
-
-
-WM_CLASS_TO_ICON_NAME: Dict[str, str] = {
-    'jetbrains-clion.jetbrains-clion': 'xdg:clion',
-    'jetbrains-idea.jetbrains-idea': 'xdg:intellij-idea-ultimate-edition',
-    'jetbrains-pycharm.jetbrains-pycharm': 'xdg:pycharm',
-    'PDF Studio Pro.PDF Studio Pro': 'xdg:pdfstudio',
-    'subl.Subl': 'xdg:sublime-text',
-    'texmacs.bin.texmacs.bin': 'xdg:TeXmacs',
-    'vivaldi-stable.Vivaldi-stable': 'xdg:vivaldi',
+WM_CLASS_TO_ICON_NAME: dict[(str, str), str] = {
+    ('jetbrains-clion', 'jetbrains-clion'): 'xdg:clion',
+    ('jetbrains-idea', 'jetbrains-idea'): 'xdg:intellij-idea-ultimate-edition',
+    ('jetbrains-pycharm', 'jetbrains-pycharm'): 'xdg:pycharm',
+    ('nomacs', 'Image Lounge'): 'xdg:org.nomacs.ImageLounge',
+    ('PDF Studio Pro', 'PDF Studio Pro'): 'xdg:pdfstudio',
+    ('subl', 'Subl'): 'xdg:sublime-text',
+    ('texmacs.bin', 'texmacs.bin'): 'xdg:TeXmacs',
+    ('vivaldi-stable', 'Vivaldi-stable'): 'xdg:vivaldi',
 }
 
 
-def get_icons(wm_class: str, win_instance: str, win_class: str) -> List[str]:
+def get_icons(win_instance: str, win_class: str) -> list[str]:
     res = []
-    if wm_class in WM_CLASS_TO_ICON_NAME:
-        res = [WM_CLASS_TO_ICON_NAME[wm_class]]
+    if (win_instance, win_class) in WM_CLASS_TO_ICON_NAME:
+        res = [WM_CLASS_TO_ICON_NAME[(win_instance, win_class)]]
     return [*res, f'xdg:{win_instance}', f'xdg:{win_class.lower()}']
 
 
+Param = ParamSpec('Param')
+
+
 class Plugin(QueryHandler):
+    ewmh: EWMH | None = None
+
     def id(self) -> str:
         return __name__
 
@@ -68,43 +47,55 @@ class Plugin(QueryHandler):
     def description(self) -> str:
         return md_description
 
+    def initialize(self) -> None:
+        self.ewmh = EWMH()
+
     def synopsis(self) -> str:
         return 'filter'
+
+    def with_flush(self, func: Callable[Param, None]) -> Callable[Param, None]:
+        def wrapper(*args, **kwargs) -> None:
+            func(*args, **kwargs)
+            self.ewmh.display.flush()
+
+        return wrapper
 
     def handleQuery(self, query: Query) -> None:
         stripped = query.string.strip().lower()
         if not stripped:
             return
-        for line in subprocess.check_output(['wmctrl', '-l', '-x'], text=True).splitlines():
-            win = Window(*parse_window(line))
-
-            if win.desktop == '-1':
+        cur_desktop = self.ewmh.getCurrentDesktop()
+        windows = self.ewmh.getClientList()
+        for window in windows:
+            if self.ewmh.getWmDesktop(window) == 0xFFFFFFFF:
                 continue
 
-            (win_instance, win_class) = find_win_instance_class(win.wm_class)  # pylint: disable=unpacking-non-sequence
-            matches = [win_instance.lower(), win_class.lower(), win.wm_name.lower()]
+            (win_instance, win_class) = window.get_wm_class()
+            win_desktop = self.ewmh.getWmDesktop(window)
+            win_wm_name = self.ewmh.getWmName(window).decode()
+            matches = [win_instance.lower(), win_class.lower(), win_wm_name.lower()]
 
             if any(stripped in match for match in matches):
                 item = Item(
-                    id=f'{md_name}/{win.wid}',
-                    text=f'{win_class.replace("-", " ")} - <i>Desktop {win.desktop}</i>',
-                    subtext=win.wm_name,
-                    icon=get_icons(win.wm_class, win_instance, win_class.lower()),
+                    id=f'{md_name}/{window.id}',
+                    text=f'{win_class} - <i>Desktop {win_desktop}</i>',
+                    subtext=win_wm_name,
+                    icon=get_icons(win_instance, win_class),
                     actions=[
                         Action(
-                            f'{md_name}/switch/{win.wid}',
+                            f'{md_name}/switch/{window.id}',
                             'Switch Window',
-                            lambda wid=win.wid: runDetachedProcess(['wmctrl', '-i', '-a', wid]),
+                            self.with_flush(lambda window_=window: self.ewmh.setActiveWindow(window_)),
                         ),
                         Action(
-                            f'{md_name}/move_to_desktop/{win.wid}',
+                            f'{md_name}/move_to_desktop/{window.id}',
                             'Move window to this desktop',
-                            lambda wid=win.wid: runDetachedProcess(['wmctrl', '-i', '-R', wid]),
+                            self.with_flush(lambda window_=window: self.ewmh.setWmDesktop(window_, cur_desktop)),
                         ),
                         Action(
-                            f'{md_name}/close/{win.wid}',
+                            f'{md_name}/close/{window.id}',
                             'Close the window gracefully',
-                            lambda wid=win.wid: runDetachedProcess(['wmctrl', '-i', '-c', wid]),
+                            self.with_flush(lambda window_=window: self.ewmh.setCloseWindow(window_)),
                         ),
                     ],
                 )

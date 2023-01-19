@@ -1,3 +1,16 @@
+[project]
+name = ''
+version = ''
+description = ''
+authors = [
+    {name = 'Steven Xu', email = 'stevenxxiu@gmail.com'},
+]
+dependencies = [
+    'ewmh>=0.1.6',
+]
+requires-python = '>=3.10'
+license = {text = 'MIT'}
+
 [tool.black]
 target-version = ['py310']
 line-length = 120
