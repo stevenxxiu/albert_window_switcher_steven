@@ -62,8 +62,6 @@ class Plugin(QueryHandler):
 
     def handleQuery(self, query: Query) -> None:
         stripped = query.string.strip().lower()
-        if not stripped:
-            return
         cur_desktop = self.ewmh.getCurrentDesktop()
         windows = self.ewmh.getClientList()
         for window in windows:
