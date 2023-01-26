@@ -7,7 +7,7 @@ from ewmh import EWMH
 md_iid = '0.5'
 md_version = '1.0'
 md_name = 'Window Switcher Steven'
-md_description = 'List and manage X11 windows.'
+md_description = 'List and manage X11 windows'
 md_url = 'https://github.com/stevenxxiu/albert_window_switcher_steven'
 md_maintainers = '@stevenxxiu'
 md_lib_dependencies = ['ewmh']
