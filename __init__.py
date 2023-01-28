@@ -12,6 +12,8 @@ md_url = 'https://github.com/stevenxxiu/albert_window_switcher_steven'
 md_maintainers = '@stevenxxiu'
 md_lib_dependencies = ['ewmh']
 
+TRIGGER = 'w'
+
 
 WM_CLASS_TO_ICON_NAME: dict[(str, str), str] = {
     ('jetbrains-clion', 'jetbrains-clion'): 'xdg:clion',
@@ -46,6 +48,9 @@ class Plugin(QueryHandler):
 
     def description(self) -> str:
         return md_description
+
+    def defaultTrigger(self) -> str:
+        return TRIGGER
 
     def initialize(self) -> None:
         self.ewmh = EWMH()
