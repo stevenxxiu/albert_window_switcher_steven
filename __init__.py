@@ -16,6 +16,7 @@ TRIGGER = 'w'
 
 
 WM_CLASS_TO_ICON_NAME: dict[(str, str), str] = {
+    ('gimp-2.10', 'Gimp-2.10'): 'xdg:gimp',
     ('jetbrains-clion', 'jetbrains-clion'): 'xdg:clion',
     ('jetbrains-idea', 'jetbrains-idea'): 'xdg:intellij-idea-ultimate-edition',
     ('jetbrains-pycharm', 'jetbrains-pycharm'): 'xdg:pycharm',
