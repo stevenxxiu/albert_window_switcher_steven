@@ -12,8 +12,6 @@ md_url = 'https://github.com/stevenxxiu/albert_window_switcher_steven'
 md_maintainers = '@stevenxxiu'
 md_lib_dependencies = ['ewmh']
 
-TRIGGER = 'w'
-
 
 WM_CLASS_TO_ICON_NAME: dict[(str, str), str] = {
     ('gimp-2.10', 'Gimp-2.10'): 'xdg:gimp',
@@ -51,7 +49,7 @@ class Plugin(QueryHandler):
         return md_description
 
     def defaultTrigger(self) -> str:
-        return TRIGGER
+        return 'w'
 
     def initialize(self) -> None:
         self.ewmh = EWMH()
