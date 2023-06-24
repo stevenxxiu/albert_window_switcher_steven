@@ -1,11 +1,11 @@
 from typing import Callable, ParamSpec
 
-from albert import Action, Item, Query, QueryHandler  # pylint: disable=import-error
+from albert import Action, Item, TriggerQuery, TriggerQueryHandler  # pylint: disable=import-error
 from ewmh import EWMH
 
 
-md_iid = '0.5'
-md_version = '1.0'
+md_iid = '1.0'
+md_version = '1.1'
 md_name = 'Window Switcher Steven'
 md_description = 'List and manage X11 windows'
 md_url = 'https://github.com/stevenxxiu/albert_window_switcher_steven'
@@ -36,7 +36,7 @@ def get_icons(win_instance: str, win_class: str) -> list[str]:
 Param = ParamSpec('Param')
 
 
-class Plugin(QueryHandler):
+class Plugin(TriggerQueryHandler):
     ewmh: EWMH | None = None
 
     def id(self) -> str:
@@ -64,7 +64,7 @@ class Plugin(QueryHandler):
 
         return wrapper
 
-    def handleQuery(self, query: Query) -> None:
+    def handleTriggerQuery(self, query: TriggerQuery) -> None:
         stripped = query.string.strip().lower()
         cur_desktop = self.ewmh.getCurrentDesktop()
         windows = self.ewmh.getClientList()
