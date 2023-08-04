@@ -22,7 +22,7 @@ WM_CLASS_TO_ICON_NAME: dict[(str, str), str] = {
     ('PDF Studio Pro', 'PDF Studio Pro'): 'xdg:pdfstudio',
     ('subl', 'Subl'): 'xdg:sublime-text',
     ('texmacs.bin', 'texmacs.bin'): 'xdg:TeXmacs',
-    ('vencorddesktop', 'VencordDesktop'): 'xdg:vencord',
+    ('vencorddesktop', 'VencordDesktop'): 'xdg:vencord-desktop',
     ('vivaldi-stable', 'Vivaldi-stable'): 'xdg:vivaldi',
 }
 
