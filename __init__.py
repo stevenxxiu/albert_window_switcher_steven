@@ -1,11 +1,17 @@
 from typing import Callable, ParamSpec
 
-from albert import Action, Item, TriggerQuery, TriggerQueryHandler  # pylint: disable=import-error
+from albert import (  # pylint: disable=import-error
+    Action,
+    PluginInstance,
+    StandardItem,
+    TriggerQuery,
+    TriggerQueryHandler,
+)
 from ewmh import EWMH
 
 
-md_iid = '1.0'
-md_version = '1.1'
+md_iid = '2.0'
+md_version = '1.2'
 md_name = 'Window Switcher Steven'
 md_description = 'List and manage X11 windows'
 md_url = 'https://github.com/stevenxxiu/albert_window_switcher_steven'
@@ -27,7 +33,7 @@ WM_CLASS_TO_ICON_NAME: dict[(str, str), str] = {
 }
 
 
-def get_icons(win_instance: str, win_class: str) -> list[str]:
+def get_icon_urls(win_instance: str, win_class: str) -> list[str]:
     res = []
     if (win_instance, win_class) in WM_CLASS_TO_ICON_NAME:
         res = [WM_CLASS_TO_ICON_NAME[(win_instance, win_class)]]
@@ -37,26 +43,17 @@ def get_icons(win_instance: str, win_class: str) -> list[str]:
 Param = ParamSpec('Param')
 
 
-class Plugin(TriggerQueryHandler):
+class Plugin(PluginInstance, TriggerQueryHandler):
     ewmh: EWMH | None = None
 
-    def id(self) -> str:
-        return __name__
-
-    def name(self) -> str:
-        return md_name
-
-    def description(self) -> str:
-        return md_description
-
-    def defaultTrigger(self) -> str:
-        return 'w'
+    def __init__(self):
+        TriggerQueryHandler.__init__(
+            self, id=__name__, name=md_name, description=md_description, synopsis='filter', defaultTrigger='w'
+        )
+        PluginInstance.__init__(self, extensions=[self])
 
     def initialize(self) -> None:
         self.ewmh = EWMH()
-
-    def synopsis(self) -> str:
-        return 'filter'
 
     def with_flush(self, func: Callable[Param, None]) -> Callable[Param, None]:
         def wrapper(*args, **kwargs) -> None:
@@ -79,11 +76,11 @@ class Plugin(TriggerQueryHandler):
             matches = [win_instance.lower(), win_class.lower(), win_wm_name.lower()]
 
             if any(stripped in match for match in matches):
-                item = Item(
+                item = StandardItem(
                     id=f'{md_name}/{window.id}',
                     text=f'{win_class} - <i>Desktop {win_desktop}</i>',
                     subtext=win_wm_name,
-                    icon=get_icons(win_instance, win_class),
+                    iconUrls=get_icon_urls(win_instance, win_class),
                     actions=[
                         Action(
                             f'{md_name}/switch/{window.id}',
