@@ -13,7 +13,7 @@ md_maintainers = '@stevenxxiu'
 md_lib_dependencies = ['ewmh']
 
 
-WM_CLASS_TO_ICON_NAME: dict[(str, str), str] = {
+WM_CLASS_TO_ICON_NAME: dict[tuple[str, str], str] = {
     ('gimp-2.10', 'Gimp-2.10'): 'xdg:gimp',
     ('jetbrains-clion', 'jetbrains-clion'): 'xdg:clion',
     ('jetbrains-idea', 'jetbrains-idea'): 'xdg:intellij-idea-ultimate-edition',
@@ -45,7 +45,7 @@ class Plugin(PluginInstance, TriggerQueryHandler):
         PluginInstance.__init__(self)
         self.ewmh = EWMH()
 
-    def with_flush(self, func: Callable[Param, None]) -> Callable[Param, None]:
+    def with_flush(self, func: Callable[..., None]) -> Callable[..., None]:
         def wrapper(*args, **kwargs) -> None:
             func(*args, **kwargs)
             self.ewmh.display.flush()
@@ -57,12 +57,21 @@ class Plugin(PluginInstance, TriggerQueryHandler):
         cur_desktop = self.ewmh.getCurrentDesktop()
         windows = self.ewmh.getClientList()
         for window in windows:
+            assert window is not None
+
             if self.ewmh.getWmDesktop(window) == 0xFFFFFFFF:
                 continue
 
-            (win_instance, win_class) = window.get_wm_class()
+            wm_class = window.get_wm_class()
+            assert wm_class is not None
+            (win_instance, win_class) = wm_class
+
             win_desktop = self.ewmh.getWmDesktop(window)
-            win_wm_name = self.ewmh.getWmName(window).decode()
+
+            wm_name = self.ewmh.getWmName(window)
+            assert wm_name is not None
+            win_wm_name = wm_name.decode()
+
             matches = [win_instance.lower(), win_class.lower(), win_wm_name.lower()]
 
             if any(stripped in match for match in matches):
