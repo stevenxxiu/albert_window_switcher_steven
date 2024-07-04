@@ -1,17 +1,11 @@
 from typing import Callable, ParamSpec
 
-from albert import (  # pylint: disable=import-error
-    Action,
-    PluginInstance,
-    StandardItem,
-    TriggerQuery,
-    TriggerQueryHandler,
-)
+from albert import Action, PluginInstance, StandardItem, TriggerQueryHandler  # pylint: disable=import-error
 from ewmh import EWMH
 
 
-md_iid = '2.0'
-md_version = '1.2'
+md_iid = '2.3'
+md_version = '1.3'
 md_name = 'Window Switcher Steven'
 md_description = 'List and manage X11 windows'
 md_url = 'https://github.com/stevenxxiu/albert_window_switcher_steven'
@@ -44,15 +38,11 @@ Param = ParamSpec('Param')
 
 
 class Plugin(PluginInstance, TriggerQueryHandler):
-    ewmh: EWMH | None = None
-
     def __init__(self):
         TriggerQueryHandler.__init__(
             self, id=__name__, name=md_name, description=md_description, synopsis='filter', defaultTrigger='w '
         )
-        PluginInstance.__init__(self, extensions=[self])
-
-    def initialize(self) -> None:
+        PluginInstance.__init__(self)
         self.ewmh = EWMH()
 
     def with_flush(self, func: Callable[Param, None]) -> Callable[Param, None]:
@@ -62,7 +52,7 @@ class Plugin(PluginInstance, TriggerQueryHandler):
 
         return wrapper
 
-    def handleTriggerQuery(self, query: TriggerQuery) -> None:
+    def handleTriggerQuery(self, query) -> None:
         stripped = query.string.strip().lower()
         cur_desktop = self.ewmh.getCurrentDesktop()
         windows = self.ewmh.getClientList()
