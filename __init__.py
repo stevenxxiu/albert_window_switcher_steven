@@ -1,6 +1,6 @@
 from typing import Callable, ParamSpec
 
-from albert import Action, PluginInstance, StandardItem, TriggerQueryHandler  # pylint: disable=import-error
+from albert import Action, Matcher, PluginInstance, StandardItem, TriggerQueryHandler  # pylint: disable=import-error
 from ewmh import EWMH
 
 
@@ -53,7 +53,8 @@ class Plugin(PluginInstance, TriggerQueryHandler):
         return wrapper
 
     def handleTriggerQuery(self, query) -> None:
-        stripped = query.string.strip().lower()
+        matcher = Matcher(query.string)
+
         cur_desktop = self.ewmh.getCurrentDesktop()
         windows = self.ewmh.getClientList()
         for window in windows:
@@ -72,9 +73,7 @@ class Plugin(PluginInstance, TriggerQueryHandler):
             assert wm_name is not None
             win_wm_name = wm_name.decode()
 
-            matches = [win_instance.lower(), win_class.lower(), win_wm_name.lower()]
-
-            if any(stripped in match for match in matches):
+            if matcher.match(win_instance) or matcher.match(win_class) or matcher.match(win_wm_name):
                 item = StandardItem(
                     id=f'{md_name}/{window.id}',
                     text=f'{win_class} - <i>Desktop {win_desktop}</i>',
