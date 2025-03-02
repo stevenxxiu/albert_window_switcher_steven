@@ -29,3 +29,4 @@ max-line-length = 120
 
 [tool.pyright]
 reportMissingModuleSource = false
+stubPath = './stubs/'
