@@ -1,15 +1,15 @@
 from typing import Callable, ParamSpec
 
-from albert import Action, Matcher, PluginInstance, StandardItem, TriggerQueryHandler  # pylint: disable=import-error
+from albert import Action, Matcher, PluginInstance, StandardItem, TriggerQueryHandler
 from ewmh import EWMH
 
-
-md_iid = '2.3'
-md_version = '1.3'
+md_iid = '3.0'
+md_version = '1.4'
 md_name = 'Window Switcher Steven'
 md_description = 'List and manage X11 windows'
+md_license = 'MIT'
 md_url = 'https://github.com/stevenxxiu/albert_window_switcher_steven'
-md_maintainers = '@stevenxxiu'
+md_authors = ['@stevenxxiu']
 md_lib_dependencies = ['ewmh']
 
 
@@ -39,11 +39,15 @@ Param = ParamSpec('Param')
 
 class Plugin(PluginInstance, TriggerQueryHandler):
     def __init__(self):
-        TriggerQueryHandler.__init__(
-            self, id=__name__, name=md_name, description=md_description, synopsis='filter', defaultTrigger='w '
-        )
         PluginInstance.__init__(self)
+        TriggerQueryHandler.__init__(self)
         self.ewmh = EWMH()
+
+    def synopsis(self, _query: str) -> str:
+        return 'filter'
+
+    def defaultTrigger(self):
+        return 'w '
 
     def with_flush(self, func: Callable[..., None]) -> Callable[..., None]:
         def wrapper(*args, **kwargs) -> None:
