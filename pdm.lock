@@ -5,40 +5,7 @@
 groups = ["default"]
 strategy = ["cross_platform"]
 lock_version = "4.5.0"
-content_hash = "sha256:d84b68119b2c4a584a2ecdbf4a851c8c575b40871c7a90174fc473d70993f7dd"
+content_hash = "sha256:0b1553d2c728a62b86879591ca671afe4615e14fb9efc14894637ac8cb177fae"
 
 [[metadata.targets]]
 requires_python = ">=3.12"
-
-[[package]]
-name = "ewmh"
-version = "0.1.6"
-summary = "python implementation of Extended Window Manager Hints, based on Xlib"
-dependencies = [
-    "python-xlib",
-]
-files = [
-    {file = "ewmh-0.1.6.tar.gz", hash = "sha256:c56b093f7d575181e979bb3a7d15c34065755f811c351ff0a31fede12b09343d"},
-]
-
-[[package]]
-name = "python-xlib"
-version = "0.33"
-summary = "Python X Library"
-dependencies = [
-    "six>=1.10.0",
-]
-files = [
-    {file = "python-xlib-0.33.tar.gz", hash = "sha256:55af7906a2c75ce6cb280a584776080602444f75815a7aff4d287bb2d7018b32"},
-    {file = "python_xlib-0.33-py2.py3-none-any.whl", hash = "sha256:c3534038d42e0df2f1392a1b30a15a4ff5fdc2b86cfa94f072bf11b10a164398"},
-]
-
-[[package]]
-name = "six"
-version = "1.16.0"
-requires_python = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*"
-summary = "Python 2 and 3 compatibility utilities"
-files = [
-    {file = "six-1.16.0-py2.py3-none-any.whl", hash = "sha256:8abb2f1d86890a2dfb989f9a77cfcfd3e47c2a354b01111771326f8aa26e0254"},
-    {file = "six-1.16.0.tar.gz", hash = "sha256:1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926"},
-]

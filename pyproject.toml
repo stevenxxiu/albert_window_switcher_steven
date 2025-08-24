@@ -5,9 +5,7 @@ description = ''
 authors = [
     {name = 'Steven Xu', email = 'stevenxxiu@gmail.com'},
 ]
-dependencies = [
-    'ewmh>=0.1.6',
-]
+dependencies = []
 requires-python = '>=3.12'
 license = {text = 'MIT'}
 
