@@ -118,5 +118,6 @@ class Plugin(PluginInstance, TriggerQueryHandler):
             stack.extend([(workspace, child) for child in cur_node.nodes])
             stack.extend([(workspace, child) for child in cur_node.floating_nodes])
 
-        for item in items:
+        # Reverse to match the window display order
+        for item in reversed(items):
             query.add(item)  # pyright: ignore[reportUnknownMemberType]
