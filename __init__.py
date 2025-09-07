@@ -16,7 +16,7 @@ from albert import (
 md_iid = '3.0'
 md_version = '1.5'
 md_name = 'Window Switcher Steven'
-md_description = 'List and manage X11 windows'
+md_description = 'List and manage Sway windows'
 md_license = 'MIT'
 md_url = 'https://github.com/stevenxxiu/albert_window_switcher_steven'
 md_authors = ['@stevenxxiu']
