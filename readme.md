@@ -1,5 +1,5 @@
 # Albert Launcher Window Switcher Extension
-List and manage *X11* windows.
+List and manage *Sway* windows.
 
 ## Install
 To install, copy or symlink this directory to `~/.local/share/albert/python/plugins/window_switcher_steven/`.
