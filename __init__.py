@@ -1,4 +1,6 @@
 import asyncio
+import time
+from threading import Thread
 from typing import Callable, Self, cast, override
 
 from albert import (
@@ -49,6 +51,21 @@ class SwayTreeNode(connection.Con):
         pass
 
 
+async def focus_window(node: SwayTreeNode) -> None:
+    await node.command('focus')  # pyright: ignore[reportGeneralTypeIssues]
+
+
+async def kill_window(node: SwayTreeNode) -> None:
+    await node.command('kill')  # pyright: ignore[reportGeneralTypeIssues]
+
+
+async def move_window(sway: Connection, node: SwayTreeNode) -> None:
+    await node.command('mark --add to_move')  # pyright: ignore[reportGeneralTypeIssues]
+    time.sleep(0.1)  # Wait until *Albert Launcher* closes
+    _ = await sway.command('move mark to_move')
+    await node.command('mark --toggle to_move')  # pyright: ignore[reportGeneralTypeIssues]
+
+
 class Plugin(PluginInstance, TriggerQueryHandler):
     def __init__(self) -> None:
         PluginInstance.__init__(self)
@@ -76,7 +93,11 @@ class Plugin(PluginInstance, TriggerQueryHandler):
                 continue
             workspace_name = node.workspace().name
             floating_text: str = ' (floating)' if node.type == 'floating_con' else ''
-            switch_window_call: Callable[[SwayTreeNode], None] = lambda node_=node: asyncio.run(node_.command('focus'))  # noqa: E731  # pyright: ignore[reportUnknownLambdaType, reportArgumentType]
+            focus_call: Callable[[SwayTreeNode], None] = lambda node_=node: asyncio.run(focus_window(node_))  # noqa: E731
+            kill_call: Callable[[SwayTreeNode], None] = lambda node_=node: asyncio.run(kill_window(node_))  # noqa: E731
+            move_call: Callable[[SwayTreeNode], None] = lambda node_=node: Thread(  # noqa: E731
+                target=asyncio.run, args=(move_window(sway, node_),)
+            ).start()
             icon_urls = []
             if node.app_id is not None:
                 icon_urls = get_icon_urls(node.app_id)
@@ -87,11 +108,9 @@ class Plugin(PluginInstance, TriggerQueryHandler):
                     subtext=node.app_id or '',
                     iconUrls=icon_urls,
                     actions=[
-                        Action(
-                            self.id(),
-                            'Switch Window',
-                            switch_window_call,
-                        ),
+                        Action(self.id(), 'Focus', focus_call),
+                        Action(self.id(), 'Kill', kill_call),
+                        Action(self.id(), 'Move', move_call),
                     ],
                 )
             )
