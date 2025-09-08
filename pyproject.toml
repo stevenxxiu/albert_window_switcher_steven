@@ -5,11 +5,17 @@ description = ''
 authors = [
     {name = 'Steven Xu', email = 'stevenxxiu@gmail.com'},
 ]
-dependencies = []
+dependencies = [
+    'i3ipc>=2.2.1',
+]
 requires-python = '>=3.12'
 license = {text = 'MIT'}
 
 [tool.basedpyright]
+extraPaths = [
+    '__pypackages__/3.13/lib/',
+    '/usr/lib/python3.13/site-packages/pdm/pep582/',
+]
 reportIncompatibleMethodOverride = false
 reportMissingModuleSource = false
 

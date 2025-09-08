@@ -3,9 +3,44 @@
 
 [metadata]
 groups = ["default"]
-strategy = ["cross_platform"]
+strategy = []
 lock_version = "4.5.0"
-content_hash = "sha256:0b1553d2c728a62b86879591ca671afe4615e14fb9efc14894637ac8cb177fae"
+content_hash = "sha256:409146fe598ca413ee5ce329a47abd0406494b062e88267c17cec524c9865027"
 
 [[metadata.targets]]
 requires_python = ">=3.12"
+
+[[package]]
+name = "i3ipc"
+version = "2.2.1"
+requires_python = ">=3.4.0"
+summary = "An improved Python library to control i3wm and sway"
+dependencies = [
+    "python-xlib",
+]
+files = [
+    {file = "i3ipc-2.2.1-py3-none-any.whl", hash = "sha256:c0b898223d50d42c90c818deb5033d1304c582755547dee7d15df3e3781bc690"},
+    {file = "i3ipc-2.2.1.tar.gz", hash = "sha256:e880d7d7147959ead5cb34764f08b97b41385b36eb8256e8af1ce163dbcccce8"},
+]
+
+[[package]]
+name = "python-xlib"
+version = "0.33"
+summary = "Python X Library"
+dependencies = [
+    "six>=1.10.0",
+]
+files = [
+    {file = "python-xlib-0.33.tar.gz", hash = "sha256:55af7906a2c75ce6cb280a584776080602444f75815a7aff4d287bb2d7018b32"},
+    {file = "python_xlib-0.33-py2.py3-none-any.whl", hash = "sha256:c3534038d42e0df2f1392a1b30a15a4ff5fdc2b86cfa94f072bf11b10a164398"},
+]
+
+[[package]]
+name = "six"
+version = "1.17.0"
+requires_python = "!=3.0.*,!=3.1.*,!=3.2.*,>=2.7"
+summary = "Python 2 and 3 compatibility utilities"
+files = [
+    {file = "six-1.17.0-py2.py3-none-any.whl", hash = "sha256:4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274"},
+    {file = "six-1.17.0.tar.gz", hash = "sha256:ff70335d468e7eb6ec65b95b99d3a2836546063f63acc5171de367e834932a81"},
+]
