@@ -40,6 +40,7 @@ def get_icon_urls(app_id: str) -> list[str]:
 
 
 class SwayTreeNode(connection.Con):
+    id: int  # pyright: ignore[reportUninitializedInstanceVariable]
     type: str
     name: str  # pyright: ignore[reportUninitializedInstanceVariable]
     pid: int | None  # pyright: ignore[reportUninitializedInstanceVariable]
@@ -62,11 +63,39 @@ async def kill_window(node: SwayTreeNode) -> None:
     await node.command('kill')  # pyright: ignore[reportGeneralTypeIssues]
 
 
+def get_tab_index(node: SwayTreeNode) -> int | None:
+    if not node.parent:
+        return None
+    parent = cast(SwayTreeNode, node.parent)
+    if not parent.parent:
+        return None
+    siblings: list[SwayTreeNode] = parent.nodes  # pyright: ignore[reportUnknownMemberType]
+    for i, cur_node in enumerate(siblings):
+        if cur_node.id == node.id:
+            return i
+
+
+async def is_left_tab(sway: Connection, node: SwayTreeNode) -> bool:
+    tree = await sway.get_tree()
+    focused = tree.find_focused()
+    if not focused:
+        return False
+    focused = cast(SwayTreeNode, focused)
+    tab_i = get_tab_index(node)
+    focused_i = get_tab_index(focused)
+    return tab_i is not None and focused_i is not None and tab_i < focused_i
+
+
 async def move_window(sway: Connection, node: SwayTreeNode) -> None:
     await node.command('mark --add to_move')  # pyright: ignore[reportGeneralTypeIssues]
     time.sleep(0.1)  # Wait until *Albert Launcher* closes
+    node_is_left_tab = await is_left_tab(sway, node)
     _ = await sway.command('move mark to_move')
     await node.command('mark --toggle to_move')  # pyright: ignore[reportGeneralTypeIssues]
+    if node_is_left_tab:
+        # When moving a top level window left, the new window becomes the right sibling by default. Always replace the
+        # position.
+        _ = await sway.command('move left')
 
 
 class Plugin(PluginInstance, TriggerQueryHandler):
