@@ -1,7 +1,11 @@
 import asyncio
+import sys
 import time
+from pathlib import Path
 from threading import Thread
 from typing import Callable, Self, cast, override
+
+sys.path.insert(1, str(next(Path(__file__).parent.glob('__pypackages__/*/lib'))))
 
 from albert import (
     Action,
@@ -21,8 +25,6 @@ md_description = 'List and manage Sway windows'
 md_license = 'MIT'
 md_url = 'https://github.com/stevenxxiu/albert_window_switcher_steven'
 md_authors = ['@stevenxxiu']
-md_lib_dependencies = ['i3ipc']
-
 
 APP_ID_TO_ICON_NAME: dict[str, str] = {
     'texmacs': 'xdg:TeXmacs',
