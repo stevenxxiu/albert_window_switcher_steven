@@ -9,6 +9,7 @@ sys.path.insert(1, str(next(Path(__file__).parent.glob('__pypackages__/*/lib')))
 
 from albert import (
     Action,
+    Item,
     Matcher,
     PluginInstance,
     Query,
@@ -85,7 +86,7 @@ class Plugin(PluginInstance, TriggerQueryHandler):
         sway = await Connection().connect()
         matcher = Matcher(query.string)
 
-        items = []
+        items: list[Item] = []
         tree = await sway.get_tree()
         for node in tree.descendants():
             node = cast(SwayTreeNode, node)
@@ -103,20 +104,19 @@ class Plugin(PluginInstance, TriggerQueryHandler):
             icon_urls = []
             if node.app_id is not None:
                 icon_urls = get_icon_urls(node.app_id)
-            items.append(  # pyright: ignore[reportUnknownMemberType]
-                StandardItem(
-                    id=self.id(),
-                    text=f'{node.name}{floating_text} - <i>Workspace {workspace_name}</i>',
-                    subtext=node.app_id or '',
-                    iconUrls=icon_urls,
-                    actions=[
-                        Action(self.id(), 'Focus', focus_call),
-                        Action(self.id(), 'Kill', kill_call),
-                        Action(self.id(), 'Move', move_call),
-                    ],
-                )
+            item = StandardItem(
+                id=self.id(),
+                text=f'{node.name}{floating_text} - <i>Workspace {workspace_name}</i>',
+                subtext=node.app_id or '',
+                iconUrls=icon_urls,
+                actions=[
+                    Action(self.id(), 'Focus', focus_call),
+                    Action(self.id(), 'Kill', kill_call),
+                    Action(self.id(), 'Move', move_call),
+                ],
             )
-        query.add(items)  # pyright: ignore[reportUnknownMemberType, reportUnknownArgumentType]
+            items.append(item)
+        query.add(items)  # pyright: ignore[reportUnknownMemberType]
 
     @override
     def handleTriggerQuery(self, query: Query) -> None:
