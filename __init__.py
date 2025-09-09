@@ -1,6 +1,8 @@
 import asyncio
+import enum
 import sys
 import time
+from enum import Enum
 from pathlib import Path
 from threading import Thread
 from typing import Callable, Self, cast, override
@@ -75,27 +77,41 @@ def get_tab_index(node: SwayTreeNode) -> int | None:
             return i
 
 
-async def is_left_tab(sway: Connection, node: SwayTreeNode) -> bool:
+class MoveMode(Enum):
+    MOVE_SELECTED_TO_FOCUSED = enum.auto()
+    MOVE_FOCUSED_TO_SELECTED = enum.auto()
+
+
+async def move_window(sway: Connection, node: SwayTreeNode, move_mode: MoveMode) -> None:
+    time.sleep(0.1)  # Wait until *Albert Launcher* closes
+
     tree = await sway.get_tree()
     focused = tree.find_focused()
     if not focused:
-        return False
+        return
     focused = cast(SwayTreeNode, focused)
-    tab_i = get_tab_index(node)
     focused_i = get_tab_index(focused)
-    return tab_i is not None and focused_i is not None and tab_i < focused_i
+    tab_i = get_tab_index(node)
 
+    if move_mode == MoveMode.MOVE_SELECTED_TO_FOCUSED:
+        _ = await sway.command('mark --add move_dest')
+        await node.command('focus')  # pyright: ignore[reportGeneralTypeIssues]
+        await node.command('move mark move_dest')  # pyright: ignore[reportGeneralTypeIssues]
+        # Running this once just moves the mark to the other window
+        _ = await sway.command('mark --toggle move_dest')
+        _ = await sway.command('mark --toggle move_dest')
+    else:
+        await node.command('mark --add move_dest')  # pyright: ignore[reportGeneralTypeIssues]
+        _ = await sway.command('move mark move_dest')
+        await node.command('mark --toggle move_dest')  # pyright: ignore[reportGeneralTypeIssues]
 
-async def move_window(sway: Connection, node: SwayTreeNode) -> None:
-    await node.command('mark --add to_move')  # pyright: ignore[reportGeneralTypeIssues]
-    time.sleep(0.1)  # Wait until *Albert Launcher* closes
-    node_is_left_tab = await is_left_tab(sway, node)
-    _ = await sway.command('move mark to_move')
-    await node.command('mark --toggle to_move')  # pyright: ignore[reportGeneralTypeIssues]
-    if node_is_left_tab:
+    if focused_i is not None and tab_i is not None:
         # When moving a top level window left, the new window becomes the right sibling by default. Always replace the
         # position.
-        _ = await sway.command('move left')
+        if move_mode == MoveMode.MOVE_SELECTED_TO_FOCUSED and focused_i < tab_i:
+            _ = await sway.command('move left')
+        if move_mode == MoveMode.MOVE_FOCUSED_TO_SELECTED and tab_i < focused_i:
+            _ = await sway.command('move left')
 
 
 class Plugin(PluginInstance, TriggerQueryHandler):
@@ -127,8 +143,11 @@ class Plugin(PluginInstance, TriggerQueryHandler):
             floating_text: str = ' (floating)' if node.type == 'floating_con' else ''
             focus_call: Callable[[SwayTreeNode], None] = lambda node_=node: asyncio.run(focus_window(node_))  # noqa: E731
             kill_call: Callable[[SwayTreeNode], None] = lambda node_=node: asyncio.run(kill_window(node_))  # noqa: E731
-            move_call: Callable[[SwayTreeNode], None] = lambda node_=node: Thread(  # noqa: E731
-                target=asyncio.run, args=(move_window(sway, node_),)
+            move_to_call: Callable[[SwayTreeNode], None] = lambda node_=node: Thread(  # noqa: E731
+                target=asyncio.run, args=(move_window(sway, node_, MoveMode.MOVE_FOCUSED_TO_SELECTED),)
+            ).start()
+            move_from_call: Callable[[SwayTreeNode], None] = lambda node_=node: Thread(  # noqa: E731
+                target=asyncio.run, args=(move_window(sway, node_, MoveMode.MOVE_SELECTED_TO_FOCUSED),)
             ).start()
             icon_urls = []
             if node.app_id is not None:
@@ -141,7 +160,8 @@ class Plugin(PluginInstance, TriggerQueryHandler):
                 actions=[
                     Action(self.id(), 'Focus', focus_call),
                     Action(self.id(), 'Kill', kill_call),
-                    Action(self.id(), 'Move', move_call),
+                    Action(self.id(), 'Move to', move_to_call),
+                    Action(self.id(), 'Move from', move_from_call),
                 ],
             )
             items.append(item)
