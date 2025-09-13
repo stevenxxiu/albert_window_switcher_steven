@@ -49,7 +49,7 @@ class SwayTreeNode(connection.Con):
     app_id: str | None  # pyright: ignore[reportUninitializedInstanceVariable]
 
     @override
-    def workspace(self) -> Self:
+    def workspace(self) -> Self | None:
         return self
 
     @override
@@ -139,7 +139,10 @@ class Plugin(PluginInstance, TriggerQueryHandler):
                 continue
             if not (matcher.match(node.name) or (node.app_id is not None and matcher.match(node.app_id))):
                 continue
-            workspace_name = node.workspace().name
+            workspace = node.workspace()
+            if workspace is None:
+                return
+            workspace_name = workspace.name
             floating_text: str = ' (floating)' if node.type == 'floating_con' else ''
             focus_call: Callable[[SwayTreeNode], None] = lambda node_=node: asyncio.run(focus_window(node_))  # noqa: E731
             kill_call: Callable[[SwayTreeNode], None] = lambda node_=node: asyncio.run(kill_window(node_))  # noqa: E731
