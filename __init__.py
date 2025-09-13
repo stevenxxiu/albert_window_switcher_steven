@@ -8,7 +8,6 @@ from threading import Thread
 from typing import Callable, Self, cast, override
 
 sys.path.insert(1, str(next(Path(__file__).parent.glob('__pypackages__/*/lib'))))
-
 from albert import (
     Action,
     Item,
@@ -20,6 +19,7 @@ from albert import (
 )
 from i3ipc.aio import Connection  # pyright: ignore[reportPrivateLocalImportUsage]
 from i3ipc.aio import connection
+from i3ipc.replies import CommandReply
 
 md_iid = '3.0'
 md_version = '1.5'
@@ -53,16 +53,16 @@ class SwayTreeNode(connection.Con):
         return self
 
     @override
-    def command(self, cmd: str) -> None:
-        pass
+    async def command(self, command: str) -> list[CommandReply]:
+        return []
 
 
 async def focus_window(node: SwayTreeNode) -> None:
-    await node.command('focus')  # pyright: ignore[reportGeneralTypeIssues]
+    _ = await node.command('focus')
 
 
 async def kill_window(node: SwayTreeNode) -> None:
-    await node.command('kill')  # pyright: ignore[reportGeneralTypeIssues]
+    _ = await node.command('kill')
 
 
 def get_tab_index(node: SwayTreeNode) -> int | None:
@@ -95,15 +95,15 @@ async def move_window(sway: Connection, node: SwayTreeNode, move_mode: MoveMode)
 
     if move_mode == MoveMode.MOVE_SELECTED_TO_FOCUSED:
         _ = await sway.command('mark --add move_dest')
-        await node.command('focus')  # pyright: ignore[reportGeneralTypeIssues]
-        await node.command('move mark move_dest')  # pyright: ignore[reportGeneralTypeIssues]
+        _ = await node.command('focus')
+        _ = await node.command('move mark move_dest')
         # Running this once just moves the mark to the other window
         _ = await sway.command('mark --toggle move_dest')
         _ = await sway.command('mark --toggle move_dest')
     else:
-        await node.command('mark --add move_dest')  # pyright: ignore[reportGeneralTypeIssues]
+        _ = await node.command('mark --add move_dest')
         _ = await sway.command('move mark move_dest')
-        await node.command('mark --toggle move_dest')  # pyright: ignore[reportGeneralTypeIssues]
+        _ = await node.command('mark --toggle move_dest')
 
     if focused_i is not None and tab_i is not None:
         # When moving a top level window left, the new window becomes the right sibling by default. Always replace the
