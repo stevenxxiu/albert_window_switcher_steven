@@ -93,8 +93,9 @@ async def move_window(sway: Connection, node: SwayTreeNode, move_mode: MoveMode)
     focused_i = get_tab_index(focused)
     tab_i = get_tab_index(node)
 
-    if focused_i == tab_i:
+    if focused_i is None and tab_i is None or focused_i == tab_i:
         return
+    assert focused_i is not None and tab_i is not None
 
     if move_mode == MoveMode.MOVE_SELECTED_TO_FOCUSED:
         _ = await sway.command('mark --add move_dest')
@@ -108,13 +109,12 @@ async def move_window(sway: Connection, node: SwayTreeNode, move_mode: MoveMode)
         _ = await sway.command('move mark move_dest')
         _ = await node.command('mark --toggle move_dest')
 
-    if focused_i is not None and tab_i is not None:
-        # When moving a top level window left, the new window becomes the right sibling by default. Always replace the
-        # position.
-        if move_mode == MoveMode.MOVE_SELECTED_TO_FOCUSED and focused_i < tab_i:
-            _ = await sway.command('move left')
-        if move_mode == MoveMode.MOVE_FOCUSED_TO_SELECTED and tab_i < focused_i:
-            _ = await sway.command('move left')
+    # When moving a top level window left, the new window becomes the right sibling by default. Always replace the
+    # position.
+    if move_mode == MoveMode.MOVE_SELECTED_TO_FOCUSED and focused_i < tab_i:
+        _ = await sway.command('move left')
+    if move_mode == MoveMode.MOVE_FOCUSED_TO_SELECTED and tab_i < focused_i:
+        _ = await sway.command('move left')
 
 
 class Plugin(PluginInstance, TriggerQueryHandler):
