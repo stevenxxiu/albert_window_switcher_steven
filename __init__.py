@@ -93,6 +93,9 @@ async def move_window(sway: Connection, node: SwayTreeNode, move_mode: MoveMode)
     focused_i = get_tab_index(focused)
     tab_i = get_tab_index(node)
 
+    if focused_i == tab_i:
+        return
+
     if move_mode == MoveMode.MOVE_SELECTED_TO_FOCUSED:
         _ = await sway.command('mark --add move_dest')
         _ = await node.command('focus')
