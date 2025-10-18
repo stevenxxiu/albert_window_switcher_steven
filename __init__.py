@@ -30,6 +30,7 @@ md_url = 'https://github.com/stevenxxiu/albert_window_switcher_steven'
 md_authors = ['@stevenxxiu']
 
 APP_ID_TO_ICON_NAME: dict[str, str] = {
+    'eu.betterbird.Betterbird': 'xdg:betterbird',
     'texmacs': 'xdg:TeXmacs',
 }
 
