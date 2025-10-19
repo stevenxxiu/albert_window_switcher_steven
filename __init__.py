@@ -16,12 +16,13 @@ from albert import (
     Query,
     StandardItem,
     TriggerQueryHandler,
+    makeThemeIcon,
 )
 from i3ipc.aio import Connection  # pyright: ignore[reportPrivateLocalImportUsage]
 from i3ipc.aio import connection
 from i3ipc.replies import CommandReply
 
-md_iid = '3.0'
+md_iid = '4.0'
 md_version = '1.5'
 md_name = 'Window Switcher Steven'
 md_description = 'List and manage Sway windows'
@@ -30,16 +31,13 @@ md_url = 'https://github.com/stevenxxiu/albert_window_switcher_steven'
 md_authors = ['@stevenxxiu']
 
 APP_ID_TO_ICON_NAME: dict[str, str] = {
-    'eu.betterbird.Betterbird': 'xdg:betterbird',
-    'texmacs': 'xdg:TeXmacs',
+    'eu.betterbird.Betterbird': 'betterbird',
+    'texmacs': 'TeXmacs',
 }
 
 
-def get_icon_urls(app_id: str) -> list[str]:
-    res = []
-    if app_id in APP_ID_TO_ICON_NAME:
-        res = [APP_ID_TO_ICON_NAME[app_id]]
-    return [*res, f'xdg:{app_id}']
+def get_icon_name(app_id: str) -> str:
+    return APP_ID_TO_ICON_NAME.get(app_id, app_id)
 
 
 class SwayTreeNode(connection.Con):
@@ -156,14 +154,15 @@ class Plugin(PluginInstance, TriggerQueryHandler):
             move_from_call: Callable[[SwayTreeNode], None] = lambda node_=node: Thread(  # noqa: E731
                 target=asyncio.run, args=(move_window(sway, node_, MoveMode.MOVE_SELECTED_TO_FOCUSED),)
             ).start()
-            icon_urls = []
-            if node.app_id is not None:
-                icon_urls = get_icon_urls(node.app_id)
+            icon_factory = None
+            app_id = node.app_id
+            if app_id is not None:
+                icon_factory = lambda app_id_=app_id: makeThemeIcon(get_icon_name(app_id_))  # noqa: E731
             item = StandardItem(
                 id=self.id(),
                 text=f'{node.name}{floating_text} - <i>Workspace {workspace_name}</i>',
                 subtext=node.app_id or '',
-                iconUrls=icon_urls,
+                icon_factory=icon_factory,
                 actions=[
                     Action(self.id(), 'Focus', focus_call),
                     Action(self.id(), 'Kill', kill_call),
