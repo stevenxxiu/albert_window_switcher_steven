@@ -159,15 +159,15 @@ class Plugin(PluginInstance, TriggerQueryHandler):
             if app_id is not None:
                 icon_factory = lambda app_id_=app_id: makeThemeIcon(get_icon_name(app_id_))  # noqa: E731
             item = StandardItem(
-                id=self.id(),
+                id=str(id(node)),
                 text=f'{node.name}{floating_text} - <i>Workspace {workspace_name}</i>',
                 subtext=node.app_id or '',
                 icon_factory=icon_factory,
                 actions=[
-                    Action(self.id(), 'Focus', focus_call),
-                    Action(self.id(), 'Kill', kill_call),
-                    Action(self.id(), 'Move to', move_to_call),
-                    Action(self.id(), 'Move from', move_from_call),
+                    Action('focus', 'Focus', focus_call),
+                    Action('kill', 'Kill', kill_call),
+                    Action('move_to', 'Move to', move_to_call),
+                    Action('move_from', 'Move from', move_from_call),
                 ],
             )
             items.append(item)
