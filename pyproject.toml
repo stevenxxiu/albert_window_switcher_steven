@@ -8,13 +8,13 @@ authors = [
 dependencies = [
     'i3ipc>=2.2.1',
 ]
-requires-python = '>=3.12'
+requires-python = '>=3.14'
 license = {text = 'MIT'}
 
 [tool.basedpyright]
 extraPaths = [
-    '__pypackages__/3.13/lib/',
-    '/usr/lib/python3.13/site-packages/pdm/pep582/',
+    '__pypackages__/3.14/lib/',
+    '/usr/lib/python3.14/site-packages/pdm/pep582/',
 ]
 reportIncompatibleMethodOverride = false
 reportMissingModuleSource = false
