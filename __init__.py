@@ -2,6 +2,7 @@ import asyncio
 import enum
 import sys
 import time
+from collections.abc import Generator
 from enum import Enum
 from pathlib import Path
 from threading import Thread
@@ -10,20 +11,20 @@ from typing import Callable, Self, cast, override
 sys.path.insert(1, str(next(Path(__file__).parent.glob('__pypackages__/*/lib'))))
 from albert import (
     Action,
+    GeneratorQueryHandler,
+    Icon,
     Item,
     Matcher,
     PluginInstance,
-    Query,
+    QueryContext,
     StandardItem,
-    TriggerQueryHandler,
-    makeThemeIcon,
 )
 from i3ipc.aio import Connection  # pyright: ignore[reportPrivateLocalImportUsage]
 from i3ipc.aio import connection
 from i3ipc.replies import CommandReply
 
-md_iid = '4.0'
-md_version = '1.5'
+md_iid = '5.0'
+md_version = '1.6'
 md_name = 'Window Switcher Steven'
 md_description = 'List and manage Sway windows'
 md_license = 'MIT'
@@ -116,10 +117,10 @@ async def move_window(sway: Connection, node: SwayTreeNode, move_mode: MoveMode)
         _ = await sway.command('move left')
 
 
-class Plugin(PluginInstance, TriggerQueryHandler):
+class Plugin(PluginInstance, GeneratorQueryHandler):
     def __init__(self) -> None:
         PluginInstance.__init__(self)
-        TriggerQueryHandler.__init__(self)
+        GeneratorQueryHandler.__init__(self)
 
     @override
     def synopsis(self, _query: str) -> str:
@@ -129,9 +130,9 @@ class Plugin(PluginInstance, TriggerQueryHandler):
     def defaultTrigger(self) -> str:
         return 'w '
 
-    async def asyncHandleTriggerQuery(self, query: Query) -> None:
+    async def async_items(self, ctx: QueryContext) -> list[Item]:
         sway = await Connection().connect()
-        matcher = Matcher(query.string)
+        matcher = Matcher(ctx.query)
 
         items: list[Item] = []
         tree = await sway.get_tree()
@@ -143,7 +144,7 @@ class Plugin(PluginInstance, TriggerQueryHandler):
                 continue
             workspace = node.workspace()
             if workspace is None:
-                return
+                return items
             workspace_name = workspace.name
             floating_text: str = ' (floating)' if node.type == 'floating_con' else ''
             focus_call: Callable[[SwayTreeNode], None] = lambda node_=node: asyncio.run(focus_window(node_))  # noqa: E731
@@ -157,7 +158,7 @@ class Plugin(PluginInstance, TriggerQueryHandler):
             icon_factory = None
             app_id = node.app_id
             if app_id is not None:
-                icon_factory = lambda app_id_=app_id: makeThemeIcon(get_icon_name(app_id_))  # noqa: E731
+                icon_factory = lambda app_id_=app_id: Icon.theme(get_icon_name(app_id_))  # noqa: E731
             item = StandardItem(
                 id=str(id(node)),
                 text=f'{node.name}{floating_text} - <i>Workspace {workspace_name}</i>',
@@ -171,8 +172,8 @@ class Plugin(PluginInstance, TriggerQueryHandler):
                 ],
             )
             items.append(item)
-        query.add(items)  # pyright: ignore[reportUnknownMemberType]
+        return items
 
     @override
-    def handleTriggerQuery(self, query: Query) -> None:
-        asyncio.run(self.asyncHandleTriggerQuery(query))
+    def items(self, ctx: QueryContext) -> Generator[list[Item]]:
+        yield asyncio.run(self.async_items(ctx))
